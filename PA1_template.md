@@ -118,7 +118,8 @@ Make a histogram of the total number of steps taken each day and Calculate and r
 
 ```r
 hist(totalStepsImputed$daily_steps, col="darkblue", xlab="Total steps per day",
-     ylim=c(0,30), main="Total number of steps taken each day")
+     ylim=c(0,30), main="Total number of steps taken each day",
+     breaks = seq(0,25000, by=2500))
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
