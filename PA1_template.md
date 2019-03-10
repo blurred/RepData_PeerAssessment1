@@ -7,7 +7,7 @@ output:
 ### Jason Seril
 #### March 7, 2019
 
-## Loading and preprocessing the data
+## 1. Loading and preprocessing the data
 
 ```r
 knitr::opts_chunk$set(warning=FALSE)
@@ -31,7 +31,8 @@ summary(activity)
 ##  NA's   :2304                                           Wednesday:2592
 ```
 
-## What is mean total number of steps taken per day?
+## 2. What is mean total number of steps taken per day?
+2.1 Make a histogram of the total number of steps taken each day:
 
 ```r
 activityTotalSteps <- with(activity, aggregate(steps, by=list(date), FUN=sum, 
@@ -44,7 +45,7 @@ hist(activityTotalSteps$steps, main="Total number of steps taken per day",
 
 ![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
 
-The mean of the total number of steps taken per day:
+2.2 The mean of the total number of steps taken per day:
 
 ```r
 mean(activityTotalSteps$steps)
@@ -53,7 +54,7 @@ mean(activityTotalSteps$steps)
 ```
 ## [1] 9354.23
 ```
-The median of the total number of steps taken per day:
+2.3 The median of the total number of steps taken per day:
 
 ```r
 median(activityTotalSteps$steps)
@@ -63,7 +64,8 @@ median(activityTotalSteps$steps)
 ## [1] 10395
 ```
 
-## What is the average daily activity pattern?
+## 3. What is the average daily activity pattern?
+3.1 Make a time series plot (i.e. type = “l”) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
 ```r
 averageDailyActivity <- aggregate(activity$steps, by=list(activity$interval),
@@ -76,7 +78,7 @@ plot(averageDailyActivity$interval, averageDailyActivity$mean, type="l",col="dar
 
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
-Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+3.2 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
 ```r
 averageDailyActivity[which.max(averageDailyActivity$mean),]$interval
@@ -87,8 +89,8 @@ averageDailyActivity[which.max(averageDailyActivity$mean),]$interval
 ```
 
 
-## Imputing missing values
-Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs):
+## 4. Imputing missing values
+4.1 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs):
 
 ```r
 sum(is.na(activity$steps))
@@ -98,14 +100,14 @@ sum(is.na(activity$steps))
 ## [1] 2304
 ```
 
-Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+4.2 Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
 ```r
 imputedSteps <- averageDailyActivity$mean[match(activity$interval, 
                                                 averageDailyActivity$interval)]
 ```
 
-Create a new dataset that is equal to the original dataset but with the missing data filled in.
+4.3 Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
 ```r
 activityImputed <- transform(activity, steps=ifelse(is.na(activity$steps), 
@@ -114,7 +116,8 @@ activityImputed <- transform(activity, steps=ifelse(is.na(activity$steps),
 totalStepsImputed <- aggregate(steps ~ date, activityImputed, sum)
 names(totalStepsImputed) <- c("date", "daily_steps")
 ```
-Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+4.4 Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 ```r
 hist(totalStepsImputed$daily_steps, col="darkblue", xlab="Total steps per day",
@@ -124,5 +127,48 @@ hist(totalStepsImputed$daily_steps, col="darkblue", xlab="Total steps per day",
 
 ![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
-## Are there differences in activity patterns between weekdays and weekends?
+4.4.1 The mean of the total number of steps taken per day:
 
+```r
+mean(totalStepsImputed$daily_steps)
+```
+
+```
+## [1] 10766.19
+```
+4.4.2 The median of the total number of steps taken per day:
+
+```r
+median(totalStepsImputed$daily_steps)
+```
+
+```
+## [1] 10766.19
+```
+
+## 5. Are there differences in activity patterns between weekdays and weekends?
+5.1 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+```r
+activity$date <- as.Date(strptime(activity$date, format="%Y-%m-%d"))
+activity$datetype <- sapply(activity$date, function(x) {
+        if (weekdays(x) =="Saturday" | weekdays(x) == "Sunday")
+        {y <- "Weekend"} else
+        {y <- "Weekday"}
+        y
+})
+```
+
+5.2 Make a panel plot containing a time series plot (i.e. type = “l”) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+
+```r
+activityByDate <- aggregate(steps~interval + datetype, activity, mean, na.rm=TRUE)
+plot <- ggplot(activityByDate, aes(x=interval, y=steps, color=datetype)) +
+        geom_line() +
+        labs(title="Average daily steps by type of date", x="Interval", 
+             y="Average number of steps") + 
+        facet_wrap(~datetype, ncol=1, nrow=2)
+print(plot)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
